@@ -1,8 +1,19 @@
 import { utilities as nestWinstonModuleUtilities } from 'nest-winston';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
+import * as path from 'path';
+import * as fs from 'fs';
 
 const logDir = 'logs'; // 日志存储目录
+const requestLogDir = path.join(logDir, 'requests');
+
+// 确保日志目录存在
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir);
+}
+if (!fs.existsSync(requestLogDir)) {
+  fs.mkdirSync(requestLogDir);
+}
 
 export const loggerConfig = {
   // 控制台输出
@@ -60,21 +71,14 @@ export const loggerConfig = {
 };
 
 // 创建专门的请求日志记录器
-export const createRequestLogger = () => {
+export const createRequestLogger = (requestId: string) => {
   return winston.createLogger({
     transports: [
-      new winston.transports.DailyRotateFile({
-        ...loggerConfig.requestFile,
+      new winston.transports.File({
+        filename: path.join(requestLogDir, `${requestId}.log`),
         format: winston.format.combine(
           winston.format.timestamp(),
-          winston.format.printf((info) => {
-            const { timestamp, requestId, request } = info;
-            return JSON.stringify({
-              timestamp,
-              requestId,
-              request,
-            });
-          }),
+          winston.format.json(),
         ),
       }),
     ],
