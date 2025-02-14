@@ -4,4 +4,8 @@ export default () => ({
     console: true,
     file: true,
   },
+  siliconflow: {
+    apiUrl: process.env.SILICONFLOW_API_URL,
+    apiKey: process.env.SILICONFLOW_API_KEY,
+  },
 });

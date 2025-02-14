@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import configuration from './config/configuration';
 import { LoggerModule } from './shared/logger/logger.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { LoggerModule } from './shared/logger/logger.module';
       }),
     }),
     LoggerModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [],
