@@ -2,9 +2,12 @@ import { Controller, Post, Body, HttpCode, Res, Headers } from '@nestjs/common';
 import { Response } from 'express';
 import { ChatService } from './chat.service';
 import { ChatCompletionDto } from './dto/chat-completion.dto';
+import { Logger } from '@nestjs/common';
 
 @Controller('v1/chat')
 export class ChatController {
+  private readonly logger = new Logger(ChatController.name);
+
   constructor(private readonly chatService: ChatService) {}
 
   @Post('completions')
@@ -14,7 +17,11 @@ export class ChatController {
     @Headers('accept') accept: string,
     @Res() res: Response,
   ) {
-    if (accept === 'text/event-stream') {
+    // 检查是否需要流式输出
+    const useStream =
+      chatCompletionDto.stream && accept === 'text/event-stream';
+
+    if (useStream) {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
@@ -27,7 +34,8 @@ export class ChatController {
           res.write(`data: ${JSON.stringify(chunk)}\n\n`);
         },
         error: (error) => {
-          console.error('Stream error:', error);
+          this.logger.error('Stream error:', error);
+          res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
           res.end();
         },
         complete: () => {
@@ -36,7 +44,15 @@ export class ChatController {
         },
       });
     } else {
-      res.json({ error: 'Streaming is required for this endpoint' });
+      // 非流式请求
+      try {
+        const response =
+          await this.chatService.createChatCompletion(chatCompletionDto);
+        res.json(response);
+      } catch (error) {
+        this.logger.error('API error:', error);
+        res.status(500).json({ error: error.message });
+      }
     }
   }
 }
