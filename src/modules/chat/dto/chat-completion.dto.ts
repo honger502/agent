@@ -32,3 +32,15 @@ export interface ChatCompletionResponse {
     total_tokens: number;
   };
 }
+
+export interface ChatCompletionChunk {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: {
+    index: number;
+    delta: Partial<Message>;
+    finish_reason: string | null;
+  }[];
+}
