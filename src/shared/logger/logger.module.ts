@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 import { loggerConfig } from '../../config/logger.config';
+import { RequestLoggerService } from './request-logger.service';
 
+@Global()
 @Module({
   imports: [
     WinstonModule.forRootAsync({
@@ -33,5 +35,7 @@ import { loggerConfig } from '../../config/logger.config';
       },
     }),
   ],
+  providers: [RequestLoggerService],
+  exports: [RequestLoggerService],
 })
 export class LoggerModule {}

@@ -3,12 +3,16 @@ import { Response } from 'express';
 import { ChatService } from './chat.service';
 import { ChatCompletionDto } from './dto/chat-completion.dto';
 import { Logger } from '@nestjs/common';
+import { RequestLoggerService } from '../../shared/logger/request-logger.service';
 
 @Controller('v1/chat')
 export class ChatController {
   private readonly logger = new Logger(ChatController.name);
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly requestLogger: RequestLoggerService,
+  ) {}
 
   @Post('completions')
   @HttpCode(200)
@@ -18,6 +22,11 @@ export class ChatController {
     @Res() res: Response,
   ) {
     const requestId = `req_${Date.now()}`;
+
+    // 记录请求参数到专门的日志文件
+    this.requestLogger.logRequest(requestId, chatCompletionDto);
+
+    // 保持现有的日志记录
     this.logger.log({
       message: 'Received chat completion request',
       requestId,
