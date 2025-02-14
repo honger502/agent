@@ -12,7 +12,7 @@ import { LoggerModule } from './shared/logger/logger.module';
       envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
       validationSchema: Joi.object({
         NODE_ENV: Joi.string()
-          .valid('development', 'production', 'test')
+          .valid('development', 'stg', 'production')
           .default('development'),
         PORT: Joi.number().default(3000),
       }),
