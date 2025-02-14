@@ -7,7 +7,6 @@ import {
   ChatCompletionChunk,
 } from './dto/chat-completion.dto';
 import { Observable, firstValueFrom } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 @Injectable()
 export class ChatService {
@@ -50,34 +49,56 @@ export class ChatService {
   createChatCompletionStream(
     chatCompletionDto: ChatCompletionDto,
   ): Observable<ChatCompletionChunk> {
-    return this.httpService
-      .post<string>(
-        this.apiUrl,
-        { ...chatCompletionDto, stream: true },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
+    return new Observable((subscriber) => {
+      fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
         },
-      )
-      .pipe(
-        map((response) => {
-          const dataStr = response.data as string;
-
-          // 处理 [DONE] 消息
-          if (dataStr.includes('data: [DONE]')) {
-            return null;
+        body: JSON.stringify({ ...chatCompletionDto, stream: true }),
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
 
-          // 提取并解析 JSON 数据
-          const match = dataStr.match(/^data: ({.*})/);
-          if (!match) {
-            return null;
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) {
+                subscriber.complete();
+                break;
+              }
+
+              const chunk = decoder.decode(value);
+              const lines = chunk
+                .split('\n')
+                .map((line) => line.trim())
+                .filter((line) => line.startsWith('data: '));
+
+              for (const line of lines) {
+                if (line === 'data: [DONE]') {
+                  continue;
+                }
+                const json = JSON.parse(line.slice(6));
+                subscriber.next(json);
+              }
+            }
+          } catch (error) {
+            subscriber.error(error);
           }
+        })
+        .catch((error) => {
+          subscriber.error(error);
+        });
 
-          return JSON.parse(match[1]) as ChatCompletionChunk;
-        }),
-      );
+      // 返回清理函数
+      return () => {
+        // 清理工作
+      };
+    });
   }
 }
