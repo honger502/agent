@@ -17,12 +17,18 @@ export class ChatController {
     @Headers('accept') accept: string,
     @Res() res: Response,
   ) {
-    // 检查是否需要流式输出
-    const useStream =
-      chatCompletionDto.stream && accept === 'text/event-stream';
+    const requestId = `req_${Date.now()}`;
+    this.logger.log({
+      message: 'Received chat completion request',
+      requestId,
+      model: chatCompletionDto.model,
+      messageCount: chatCompletionDto.messages.length,
+      stream: chatCompletionDto.stream,
+    });
+
+    const useStream = chatCompletionDto.stream;
 
     if (useStream) {
-      res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
@@ -31,10 +37,16 @@ export class ChatController {
 
       stream.subscribe({
         next: (chunk) => {
-          res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+          if (chunk) {
+            res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+          }
         },
         error: (error) => {
-          this.logger.error('Stream error:', error);
+          this.logger.error({
+            message: 'Stream error occurred',
+            requestId,
+            error: error.message,
+          });
           res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
           res.end();
         },
@@ -44,13 +56,16 @@ export class ChatController {
         },
       });
     } else {
-      // 非流式请求
       try {
         const response =
           await this.chatService.createChatCompletion(chatCompletionDto);
         res.json(response);
       } catch (error) {
-        this.logger.error('API error:', error);
+        this.logger.error({
+          message: 'Chat completion failed',
+          requestId,
+          error: error.message,
+        });
         res.status(500).json({ error: error.message });
       }
     }

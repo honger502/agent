@@ -43,4 +43,9 @@ export interface ChatCompletionChunk {
     delta: Partial<Message>;
     finish_reason: string | null;
   }[];
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }

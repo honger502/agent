@@ -51,22 +51,32 @@ export class ChatService {
     chatCompletionDto: ChatCompletionDto,
   ): Observable<ChatCompletionChunk> {
     return this.httpService
-      .post<ChatCompletionChunk>(
+      .post<string>(
         this.apiUrl,
         { ...chatCompletionDto, stream: true },
         {
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
-            Accept: 'text/event-stream',
           },
-          responseType: 'stream',
         },
       )
       .pipe(
         map((response) => {
-          const chunk = response.data as unknown as ChatCompletionChunk;
-          return chunk;
+          const dataStr = response.data as string;
+
+          // 处理 [DONE] 消息
+          if (dataStr.includes('data: [DONE]')) {
+            return null;
+          }
+
+          // 提取并解析 JSON 数据
+          const match = dataStr.match(/^data: ({.*})/);
+          if (!match) {
+            return null;
+          }
+
+          return JSON.parse(match[1]) as ChatCompletionChunk;
         }),
       );
   }
