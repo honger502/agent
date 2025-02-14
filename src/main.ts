@@ -12,12 +12,14 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // 使用 Winston 日志
-  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+  const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+  app.useLogger(logger);
 
   const port = configService.get<number>('port');
   await app.listen(port);
 
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  logger.log(`Application is running on: ${await app.getUrl()}`);
+  logger.log(`Running in ${configService.get('env')} mode`);
 }
 
 bootstrap();
