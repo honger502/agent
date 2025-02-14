@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import configuration from './config/configuration';
+import { LoggerModule } from './shared/logger/logger.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import configuration from './config/configuration';
         PORT: Joi.number().default(3000),
       }),
     }),
+    LoggerModule,
   ],
   controllers: [],
   providers: [],
