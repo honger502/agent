@@ -12,5 +12,10 @@ export default () => ({
     apiKey: process.env.SILICONFLOW_API_KEY,
     timeout: parseInt(process.env.SILICONFLOW_TIMEOUT, 10) || 60000,
   },
+  deepseek: {
+    apiUrl: process.env.DEEPSEEK_API_URL,
+    apiKey: process.env.DEEPSEEK_API_KEY,
+    timeout: parseInt(process.env.DEEPSEEK_TIMEOUT, 10) || 60000,
+  },
   // 可以添加其他提供商的配置
 });
