@@ -12,6 +12,13 @@ export class RequestLoggerService {
     }
 
     const logger = this.loggers.get(requestId);
-    logger.info({ request });
+    logger.info({ type: 'request', data: request });
+  }
+
+  logResponse(requestId: string, response: any) {
+    const logger = this.loggers.get(requestId);
+    if (logger) {
+      logger.info({ type: 'response', data: response });
+    }
   }
 }
