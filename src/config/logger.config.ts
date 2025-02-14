@@ -75,7 +75,7 @@ export const createRequestLogger = (requestId: string) => {
   return winston.createLogger({
     transports: [
       new winston.transports.File({
-        filename: path.join(requestLogDir, `${requestId}.log`),
+        filename: path.join(requestLogDir, `${requestId}.json`),
         format: winston.format.combine(
           winston.format.timestamp(),
           winston.format.json(),
