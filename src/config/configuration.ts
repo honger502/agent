@@ -1,8 +1,9 @@
+import defaultConfig from './envs/default.config';
 import developmentConfig from './envs/development.config';
 import productionConfig from './envs/production.config';
 import testConfig from './envs/test.config';
 
-const configs = {
+const envConfigs = {
   development: developmentConfig,
   production: productionConfig,
   test: testConfig,
@@ -10,13 +11,15 @@ const configs = {
 
 export default () => {
   const env = process.env.NODE_ENV || 'development';
-  const config = configs[env]();
+  const defaultConf = defaultConfig();
+  const envConf = envConfigs[env]();
 
   return {
-    ...config,
-    // 所有环境通用的配置
-    isProduction: env === 'production',
-    isDevelopment: env === 'development',
-    isTest: env === 'test',
+    ...defaultConf,
+    ...envConf,
+    logger: {
+      ...defaultConf.logger,
+      ...envConf.logger,
+    },
   };
 };
